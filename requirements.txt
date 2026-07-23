@@ -1,0 +1,98 @@
+# ======================================================================
+# Kurumsal Veri Asistanı — Streamlit Community Cloud (Linux) requirements
+# ======================================================================
+# Kural: KOD İÇİNDE DOĞRUDAN import edilen her paket burada AÇIKÇA
+# belirtilir ve sürümü sabitlenir. Geçişli (transitive) bağımlılıklar
+# pip'e bırakılır — hepsini sabitlemek, sürüm çakışmalarında dağıtımı
+# gereksiz yere kilitler.
+#
+# Python: 3.11 veya 3.12 önerilir (Streamlit Cloud varsayılanı uyumludur).
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# 1. STREAMLIT CLOUD SQLITE YAMASI — SIRALAMA KRİTİK
+# ----------------------------------------------------------------------
+# Streamlit Cloud'un Debian imajı, ChromaDB'nin istediğinden ESKİ bir
+# sistem SQLite'ı ile gelir; yama olmadan uygulama daha ilk açılışta
+# çöker. app.py'nin en üstündeki blok, standart `sqlite3` modülünü
+# aşağıdaki paketle değiştirir.
+# ⚠️ Bu satır olmadan app.py'deki yama sessizce devre dışı kalır
+#    (ImportError yutulur) ve uygulama Cloud'da çöker.
+pysqlite3-binary==0.5.4.post2
+
+
+# ----------------------------------------------------------------------
+# 2. ARAYÜZ
+# ----------------------------------------------------------------------
+streamlit==1.60.0
+
+
+# ----------------------------------------------------------------------
+# 3. LANGGRAPH — Tool-calling ajan döngüsü ve konuşma hafızası
+# ----------------------------------------------------------------------
+# langgraph; checkpoint, prebuilt (ToolNode/InjectedState) ve sdk
+# paketlerini kendisi getirir. Yine de doğrudan import ettiğimiz
+# alt paketleri (langgraph.prebuilt, langgraph.checkpoint) garanti
+# altına almak için sürümleri sabitliyoruz.
+langgraph==1.2.7
+langgraph-checkpoint==4.1.1
+langgraph-prebuilt==1.1.0
+
+
+# ----------------------------------------------------------------------
+# 4. LANGCHAIN ÇEKİRDEĞİ VE ENTEGRASYONLARI
+# ----------------------------------------------------------------------
+# langchain-core      : mesajlar, prompt şablonları, @tool dekoratörü
+# langchain-openai    : ChatOpenAI + OpenAIEmbeddings (openai, tiktoken getirir)
+# langchain-community : PyPDFLoader ve SQLDatabase
+# langchain-text-splitters : RecursiveCharacterTextSplitter
+# langchain-chroma    : kalıcı vektör deposu (chromadb'yi getirir)
+langchain-core==1.4.8
+langchain-openai==1.3.3
+langchain-community==0.4.2
+langchain-text-splitters==1.1.2
+langchain-chroma==1.1.0
+
+# chromadb, langchain-chroma tarafından zaten getirilir; sürümü burada
+# sabitliyoruz çünkü SQLite sürüm gereksinimini dayatan paket budur ve
+# sessiz bir major yükseltme yukarıdaki yamayı geçersiz kılabilir.
+chromadb==1.5.9
+
+# ⚠️ KRİTİK: pypdf, langchain-community'nin ZORUNLU bağımlılığı DEĞİLDİR
+# (isteğe bağlı bir ekstradır). Bu satır olmadan uygulama sorunsuz açılır
+# ama kullanıcı ilk PDF'ini yüklediğinde PyPDFLoader ImportError ile çöker.
+pypdf==6.14.2
+
+
+# ----------------------------------------------------------------------
+# 5. VERİTABANI KATMANI
+# ----------------------------------------------------------------------
+SQLAlchemy==2.0.51
+
+# --- Canlı Veritabanı Sürücüleri (Phase 6 "Canlı Bağlantı" özelliği) ---
+# Bu sürücüler olmadan uygulama çalışır ancak kullanıcı canlı bir
+# PostgreSQL/MySQL bağlantısı denediğinde "sürücü kurulu değil" hatası
+# alır — ve Streamlit Cloud'da son kullanıcının pip install yapma imkânı
+# yoktur. Özelliğin dağıtımda gerçekten çalışması için buradadırlar.
+# İkisi de saf-Python veya hazır tekerlek (wheel) olduğundan Linux
+# ortamında derleme gerektirmez.
+psycopg2-binary==2.9.11
+PyMySQL==1.1.2
+# NOT: MSSQL (pyodbc) ve Oracle (oracledb) BİLEREK eklenmedi — sistem
+# seviyesinde ODBC/Instant Client kurulumu gerektirirler ve Streamlit
+# Community Cloud'da kurulum aşamasında başarısız olurlar. Bu iki
+# veritabanına ihtiyaç duyulursa kendi barındırdığınız bir ortam gerekir.
+
+
+# ----------------------------------------------------------------------
+# 6. YARDIMCI PAKETLER
+# ----------------------------------------------------------------------
+# python-dotenv : sql_generator.py'de .env yüklemesi (yerel geliştirme).
+#                 Streamlit Cloud'da anahtarlar Secrets üzerinden verilir;
+#                 yine de import edildiği için gereklidir.
+python-dotenv==1.2.2
+
+# typing-extensions : agent.py'de NotRequired/TypedDict için doğrudan
+#                     import ediliyor.
+typing-extensions==4.16.0
