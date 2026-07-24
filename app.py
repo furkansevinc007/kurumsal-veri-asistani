@@ -466,6 +466,26 @@ with st.sidebar:
 st.title("🤖 Kurumsal Veri Asistanı")
 st.caption("Satış verilerinizden İK politikalarınıza kadar tüm kurumsal bilginize saniyeler içinde ulaşın. Asistan, karmaşık sorularınızda gerektiğinde hem veritabanınızı hem de dokümanlarınızı aynı anda tarayarak size en doğru ve bütüncül cevabı sunar.")
 
+# ----------------------------------------------------------------------
+# ONBOARDING / BOŞ DURUM (EMPTY STATE)
+# ----------------------------------------------------------------------
+# Mobilde kenar menüsü varsayılan olarak kapalı gelir; kullanıcı veri
+# yükleme araçlarını göremeden doğrudan sohbete başlıyor. Bu blok, HİÇBİR
+# veri kaynağı bağlı değilken kullanıcıyı kenar menüsüne yönlendirir.
+
+_onboarding_manifest = get_tenant_manifest(st.session_state.tenant_vector_store_path)
+_has_data_source = bool(
+    st.session_state.tenant_db_url
+    or st.session_state.tenant_db_path
+    or _onboarding_manifest["files"]
+)
+
+if not _has_data_source:
+    st.info(
+        "**Veri Kaynağınızı Bağlayın**\n\n"
+        "Asistanın kendi kurumsal verileriniz üzerinde çalışabilmesi için, sol üst köşedeki >> simgesine dokunarak (veya kenar menüsünü açarak) çalışma alanınızı yapılandırın\n\n"
+        "Bir veri kaynağı bağladığınızda bu mesaj otomatik olarak kaybolacaktır."
+    )
 
 def _render_debug_panel(meta: dict) -> None:
     """
